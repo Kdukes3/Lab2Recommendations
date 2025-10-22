@@ -37,7 +37,7 @@ public class ConsoleUI
         Console.Write("Enter rating file: ");
         string ratingsFile = Console.ReadLine();
 
-        _reader.LoadData(_books, _accounts, _ratings, booksFile, ratingsFile);
+        _reader.Seed(_books, _accounts, _ratings, booksFile, ratingsFile);
 
         Console.WriteLine($"\n# of books: {_books.Count}");
         Console.WriteLine($"# of memberList: {_accounts.Count}\n");

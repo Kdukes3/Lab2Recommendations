@@ -6,4 +6,5 @@ public interface IRatingService
     void SetRating(int memberId, int isbn, int value);
     int GetRating(int memberId, int isbn);
     List<Rating> GetRatingsForMember(int memberId);
+    void Set(int memberId, int isbn, int value);
 }
