@@ -7,21 +7,21 @@ public class BookRepository : IBookRepository
 
     public Book Add(Book b)
     {
-        _books.Add(b); return b; 
+        _books.Add(b);
+        return b;
     }
 
     public Book GetByIsbn(int isbn)
     {
         for (int i = 0; i < _books.Count; i++)
-        {
-            if (_books[i].Isbn == isbn)
+            if (_books[i]._Isbn == isbn)
             {
 
 
                 return _books[i];
-                return null;
             }
-        }
-
-        public List<Book> All() => _books;
+        return null;
     }
+
+    public List<Book> All() => _books;
+}

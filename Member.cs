@@ -2,6 +2,11 @@ namespace Lab2Recommendations;
 
 public class Member
 {
-    private string _name;
-    private int _Account;
+    public Member(int _nextId, string name)
+    {
+        Name = name;
+        _Account = _nextId;
+    }
+    public string Name;
+    public int _Account;
 }
