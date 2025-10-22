@@ -4,7 +4,7 @@ public interface IAuthenticator
 {
     int CurrentId { get; }
     bool IsLoggedIn { get; }
-    void LoginById(int id);
-    void LoginByName(string name);
+    bool LoginById(int id);
+    bool LoginByName(string name);
     void Logout();
 }
