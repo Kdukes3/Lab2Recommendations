@@ -21,7 +21,6 @@ public class Authenticator :  IAuthenticator
         var m = _accounts.GetOrAdd(name); 
         _currentId = m._Account; 
     }
-
     public void Logout()
     {
         _currentId = 0; 
