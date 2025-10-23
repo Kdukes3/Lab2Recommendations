@@ -1,7 +1,7 @@
 namespace Lab2Recommendations;
 public class TextReader : IDataReader
 {
-    public void Seed(IBookRepository books, IAccountRepository accounts, IRatingService ratings, string booksPath, string ratingsPath)
+    public void Seed(IBookRepository books, IAccountRepository accounts, IRatingRepository ratings, string booksPath, string ratingsPath)
     {
         LoadBooks(books, booksPath);
         LoadRatings(books, accounts, ratings, ratingsPath);
@@ -29,7 +29,7 @@ public class TextReader : IDataReader
     }
 
 
-    private void LoadRatings(IBookRepository books, IAccountRepository accounts, IRatingService ratings, string path)
+    private void LoadRatings(IBookRepository books, IAccountRepository accounts, IRatingRepository ratings, string path)
     {
         string[] lines = File.ReadAllLines(path);
         for(int i = 0;i < lines.Length; i++)
