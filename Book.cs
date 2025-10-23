@@ -14,4 +14,8 @@ public class Book
         _Author = author;
         _Year = year;
     }
+
+    public string Title => _Title;
+    public string Author => _Author;
+    public string Year => _Year;
 }
