@@ -238,9 +238,7 @@ public class ConsoleUI
         var ratings = Console.ReadLine()?.Trim() ?? string.Empty;
 
         Console.WriteLine("");
-        Console.WriteLine($"Enter books file: {books}");
-        Console.WriteLine($"Enter ratings file: {ratings}");
-        Console.WriteLine("");
+
         return (books, ratings);
     }
 
@@ -263,8 +261,6 @@ public class ConsoleUI
         Console.Write("Enter a menu option: ");
         var input = Console.ReadLine()?.Trim() ?? string.Empty;
 
-        Console.WriteLine("");
-        Console.WriteLine($"Enter a menu option: {input}");
         Console.WriteLine("");
 
         return input switch
@@ -292,9 +288,7 @@ public class ConsoleUI
         var input = Console.ReadLine()?.Trim() ?? string.Empty;
 
         Console.WriteLine("");
-        Console.WriteLine($"Enter a menu option: {input}");
-        Console.WriteLine("");
-
+        
         return input switch
         {
             "1" => LoggedInMenuOption.AddMember,
@@ -313,7 +307,7 @@ public class ConsoleUI
         {
             Console.Write("Enter member account ID: ");
             var input = Console.ReadLine()?.Trim() ?? string.Empty;
-            Console.WriteLine($"Enter member account ID: {input}");
+            Console.WriteLine("");
 
             if (int.TryParse(input, out var id))
                 return id;
@@ -326,7 +320,7 @@ public class ConsoleUI
     {
         Console.Write("Enter member name: ");
         var name = Console.ReadLine()?.Trim() ?? string.Empty;
-        Console.WriteLine($"Enter member name: {name}");
+        Console.WriteLine("");
         return name;
     }
 
@@ -339,9 +333,7 @@ public class ConsoleUI
         Console.Write("Year: ");
         var year = Console.ReadLine() ?? string.Empty;
 
-        Console.WriteLine($"Title: {title}");
-        Console.WriteLine($"Author: {author}");
-        Console.WriteLine($"Year: {year}");
+        Console.WriteLine("");
 
         return (title, author, year);
     }
