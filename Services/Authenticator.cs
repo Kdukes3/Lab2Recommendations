@@ -6,7 +6,10 @@ public class Authenticator : IAuthenticator
     private int _currentId = 0; // 0 means not logged in
     private string _message = "";
 
-    public Authenticator(IAccountRepository accounts) => _accounts = accounts;
+    public Authenticator(IAccountRepository accounts)
+    {
+        _accounts = accounts;
+    }
 
     public int CurrentId => _currentId;
     public bool IsLoggedIn => _currentId != 0;
