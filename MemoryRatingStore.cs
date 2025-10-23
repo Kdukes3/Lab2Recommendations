@@ -11,27 +11,24 @@ public class MemoryRatingStore : IRatingRepository
                 return rate.value;
             }
         }
-        throw new Exception("Book Not found");
+        return 0;
     }
 
     public void Set(int memberId, int isbn, int value)
     {
-        Rate.Add(new Rating(isbn, memberId, value));
+        for (int i = 0; i < Rate.Count; i++)
+        {
+            if (Rate[i].memberId == memberId && Rate[i].isbn == isbn)
+            {
+                Rate[i].value = value;
+                return;
+            }
+        }
+        Rate.Add(new Rating(memberId, isbn, value));
     }
 
     public List<Rating> GetAll()
     {
         return Rate;
     }
-
-    // public List<(int isbn, int value)> ForMember(int memberId)
-    // {
-    //     List<(int isbn, int value)> RatingList = new List<(int isbn, int value)>();
-    //     foreach (var rate in Rate)
-    //     {
-    //         int rateIsbn = rate.isbn;
-    //         int rateValue = rate.value;
-    //         RatingList.Add(rateIsbn, rateValue);
-    //     }
-    // }
 }
