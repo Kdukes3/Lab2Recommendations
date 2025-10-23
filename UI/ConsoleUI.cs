@@ -35,7 +35,7 @@ public class ConsoleUI
         Start();
         Console.WriteLine("Welcome to our Book Recommendation System!\n");
 
-        // Build main menu
+        // main menu
         var mainActions = new List<IMenuAction>
         {
             new AddMemberAction(_accounts),
@@ -44,7 +44,7 @@ public class ConsoleUI
             new QuitAction(Stop)
         };
 
-        // Build logged-in menu
+        // logged-in menu
         var loggedActions = new List<IMenuAction>
         {
             new AddMemberAction(_accounts),

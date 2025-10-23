@@ -16,7 +16,6 @@ public class RatingService :  IRatingService
 
     public void SetRating(int memberId, int bookIsbn, int value)
     {
-        // Basic validation logic can live here instead of the UI
         if (value < -5 || value > 5)
         {
             Console.WriteLine("Rating must be between -5 and 5.");
