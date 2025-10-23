@@ -1,4 +1,4 @@
-namespace Lab2Recommendations;
+namespace Lab2Recommendations.Interfaces;
 
 public interface IMember
 {

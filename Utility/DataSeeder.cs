@@ -1,4 +1,6 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Interfaces;
+
+namespace Lab2Recommendations.Utility;
 
 public class DataSeeder : IDataSeeder
 {

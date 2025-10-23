@@ -1,4 +1,7 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Interfaces;
+using Lab2Recommendations.Models;
+
+namespace Lab2Recommendations.Utility;
 public class TextReader : IDataReader
 {
     public void Seed(IBookRepository books, IAccountRepository accounts, IRatingRepository ratings, string booksPath, string ratingsPath)

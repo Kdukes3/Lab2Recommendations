@@ -1,4 +1,7 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Interfaces;
+using Lab2Recommendations.Models;
+
+namespace Lab2Recommendations.UI.Actions;
 
 public class SeeRecommendationsAction : IMenuAction
 {
@@ -21,7 +24,7 @@ public class SeeRecommendationsAction : IMenuAction
             Console.WriteLine("No neighbor found yet. Add more members/ratings.\n");
             return;
         }
-
+        
         Console.WriteLine($"Nearest neighbor: {neighbor.Name} (ID {neighbor._Account})");
         Console.WriteLine("They really liked (5):");
         if (reallyLiked.Count == 0) Console.WriteLine("- none -");

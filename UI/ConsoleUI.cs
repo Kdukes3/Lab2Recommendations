@@ -1,4 +1,9 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Interfaces;
+using Lab2Recommendations.Models;
+using Lab2Recommendations.UI.Actions;
+
+
+namespace Lab2Recommendations.UI;
 
 public class ConsoleUI
 {

@@ -1,4 +1,6 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Interfaces;
+
+namespace Lab2Recommendations.UI.Actions;
 
 public class QuitAction : IMenuAction
 {

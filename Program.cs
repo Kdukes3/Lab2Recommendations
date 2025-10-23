@@ -1,4 +1,10 @@
-﻿namespace Lab2Recommendations;
+﻿using Lab2Recommendations.Interfaces;
+using Lab2Recommendations.UI;
+using Lab2Recommendations.Utility;
+using Lab2Recommendations.Services;
+using TextReader = Lab2Recommendations.Utility.TextReader;
+
+namespace Lab2Recommendations;
 // Kyrin Dukes, Donovan Johnson, Cameron Dingle 
 class Program
 {

@@ -1,4 +1,6 @@
-namespace Lab2Recommendations;
+using Lab2Recommendations.Models;
+
+namespace Lab2Recommendations.Interfaces;
 
 public interface IAccountRepository
 {
