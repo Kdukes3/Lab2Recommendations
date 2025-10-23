@@ -20,7 +20,7 @@ public class ConsoleUI
         _auth = auth;
         _books = books;
         _accounts = accounts;
-        _ratings = ratings;   // <-- this was missing before
+        _ratings = ratings;
         _recs = recs;
         _reader = reader;
     }
@@ -30,19 +30,10 @@ public class ConsoleUI
     public void Start() => IsRunning = true;
     public void Stop()  => IsRunning = false;
 
-    /// <summary>
-    /// Runs the entire console UI: welcome, main menu loop, and (after login) the logged-in loop.
-    /// This method does not return until the user chooses "Quit".
-    /// </summary>
     public bool Run()
     {
         Start();
         ShowWelcome();
-
-        // If you want to load data files at start, uncomment this block and implement _reader.Load(...)
-        // var (booksPath, ratingsPath) = PromptFilePaths();
-        // var (bookCount, memberCount) = _reader.Load(booksPath, ratingsPath, _books, _accounts, _ratings);
-        // ShowCounts(bookCount, memberCount);
 
         while (IsRunning)
         {
@@ -52,42 +43,40 @@ public class ConsoleUI
             {
                 case MainMenuOption.AddMember:
                 {
-                    var name = PromptForMemberName();
-
-                    // TODO: actually create a member in your accounts repository.
-                    // e.g., var id = _accounts.Create(name);
-                    ShowMessage($"Member '{name}' added. (stub)");
+                    var name = PromptForMemberName(); 
+                    var member = _accounts.GetOrAdd(name);
+                    ShowMessage($"Member '{member.Name}' added with ID {member._Account}");
                     break;
                 }
 
                 case MainMenuOption.AddBook:
                 {
                     var (title, author, year) = PromptForBookDetails();
-
-                    // TODO: actually add a book to your repository.
-                    // e.g., _books.Add(new Book { Title = title, Author = author, Year = year });
-                    ShowMessage($"Book '{title}' by {author} ({year}) added. (stub)");
+                    var nextIsbn = _books.Count + 1;
+                    var added = _books.Add(new Book(nextIsbn, title, author, year));
+                    ShowMessage($"Book #{added._Isbn} - '{added.Title}' by {added.Author} ({added.Year}) added.");
                     break;
                 }
 
                 case MainMenuOption.Login:
                 {
-                    var memberId = PromptForMemberId();
+                    Console.Write("Enter member ID or name: ");
+                    var raw = Console.ReadLine()?.Trim() ?? "";
+                    bool ok;
 
-                    // TODO: replace this with your real auth call pattern.
-                    // If your authenticator returns a bool:
-                    // var ok = _auth.Login(memberId);
-                    // If it returns a result object, adjust accordingly.
-                    var loginSucceeded = TryLogin(memberId);
+                    if (int.TryParse(raw, out var id))
+                        ok = _auth.LoginById(id);
+                    else
+                        ok = _auth.LoginByName(raw);
 
-                    if (loginSucceeded)
+                    if (ok)
                     {
-                        ShowLoginSuccess($"Login successful for member #{memberId}.");
-                        LoggedInLoop(memberId);
+                        ShowLoginSuccess(_auth.Message);
+                        LoggedInLoop(_auth.CurrentId);
                     }
                     else
                     {
-                        ShowLoginFailure("Login failed. Please check your member ID.");
+                        ShowLoginFailure(_auth.Message);
                     }
                     break;
                 }
@@ -107,12 +96,10 @@ public class ConsoleUI
             }
         }
 
-        return true; // indicates the app ran to completion
+        return true; // app ran to completion
     }
-
-    // ---------------------
+    
     // Logged-in sub-loop
-    // ---------------------
     private void LoggedInLoop(int memberId)
     {
         var inSession = true;
@@ -126,44 +113,77 @@ public class ConsoleUI
                 case LoggedInMenuOption.AddMember:
                 {
                     var name = PromptForMemberName();
-                    // TODO: create another member (admin-like action?)
-                    ShowMessage($"Member '{name}' added. (stub)");
+                    var m = _accounts.GetOrAdd(name);
+                    ShowMessage($"Member '{m.Name}' added. {m._Account}");
                     break;
                 }
 
                 case LoggedInMenuOption.AddBook:
                 {
                     var (title, author, year) = PromptForBookDetails();
-                    // TODO: add book to repository
-                    ShowMessage($"Book '{title}' by {author} ({year}) added. (stub)");
+                    var nextIsbn = _books.Count + 1;
+                    var b = _books.Add(new Book(nextIsbn, title, author, year));
+                    ShowMessage($"Book #{b._Isbn} - '{b.Title}' by {b.Author} ({b.Year}) added.");
                     break;
                 }
 
                 case LoggedInMenuOption.RateBook:
                 {
-                    // TODO: prompt for book id & rating, then call _ratings.AddOrUpdate(memberId, bookId, score)
-                    ShowMessage("Rating flow not implemented yet. (stub)");
+                    var bookId = PromptForPositiveInt("Enter book ISBN to rate: ");
+                    var rating = PromptForIntInRange("Enter rating (-5 to 5): ", -5, 5);
+
+                    _ratings.SetRating(memberId, bookId, rating);
+
+                    var b = _books.GetByIsbn(bookId);
+                    var label = b != null ? $"'{b.Title}'" : $"Book #{bookId}";
+                    ShowMessage($"Rated {label} as {rating}."); 
                     break;
                 }
 
                 case LoggedInMenuOption.ViewRatings:
                 {
-                    // TODO: fetch and print this member’s ratings via _ratings
-                    ShowMessage("View ratings not implemented yet. (stub)");
+                    var ratings = _ratings.GetRatingsForMember(memberId);
+                    if (ratings.Count == 0)
+                    {
+                        ShowMessage("You have no ratings yet.");
+                        break;
+                    }
+
+                    Console.WriteLine("Your ratings:");
+                    foreach (var rating in ratings)
+                    {
+                        var b = _books.GetByIsbn(rating.isbn);
+                        var label = b != null ? $"'{b.Title}'" : $"Book #{rating.isbn}";
+                        Console.WriteLine($"- {label}: {rating.value}");
+                    }
+                    Console.WriteLine("");
                     break;
                 }
 
                 case LoggedInMenuOption.SeeRecommendations:
                 {
-                    // TODO: get recs via _recs for this member and display them
-                    ShowMessage("Recommendations not implemented yet. (stub)");
+                    var (neighbor, reallyLiked, liked) = _recs.RecommendFromNearest(memberId);
+                    if (neighbor == null)
+                    {
+                        ShowMessage("No neighbor found yet. Add more member/ratings.");
+                        break;
+                    }
+                    
+                    Console.WriteLine($"Nearest neighbor: {neighbor.Name} (ID {neighbor._Account})");
+                    Console.WriteLine("They really liked (5):");
+                    if (reallyLiked.Count == 0) Console.WriteLine("- none -");
+                    foreach (var b in reallyLiked) Console.WriteLine($"- {b._Isbn}: {b.Title}");
+                    
+                    Console.WriteLine("They liked (1 or 3):");
+                    if (liked.Count == 0) Console.WriteLine("- none -");
+                    foreach (var b in liked) Console.WriteLine($"- {b._Isbn}: {b.Title}");
+                    Console.WriteLine("");
                     break;
                 }
 
                 case LoggedInMenuOption.Logout:
                 {
-                    // TODO: if your authenticator needs explicit logout, call it here.
-                    // _auth.Logout(memberId);
+                    _auth.Logout();
                     ShowMessage("Logged out.");
                     inSession = false;
                     break;
@@ -178,24 +198,29 @@ public class ConsoleUI
         }
     }
 
-    // Replace this shim with the real call to your authenticator to avoid compile issues if signatures differ.
-    private bool TryLogin(int memberId)
+    private int PromptForPositiveInt(string prompt)
     {
-        try
+        while (true)
         {
-            // If your authenticator exposes bool Login(int id), just return that:
-            // return _auth.Login(memberId);
-
-            // Placeholder behavior (always succeeds for demo):
-            return true;
-        }
-        catch
-        {
-            return false;
+            Console.Write(prompt);
+            var input = Console.ReadLine()?.Trim() ?? "";   
+            if (int.TryParse(input, out var value) && value > 0)
+                return value;
+            ShowMessage("Invalid number. Try again.");
         }
     }
 
-    // ------------- Existing I/O helpers (with a couple of small fixes) -------------
+    private int PromptForIntInRange(string prompt, int min, int max)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            var input = Console.ReadLine()?.Trim() ?? "";
+            if (int.TryParse(input, out var value) && value >= min && value <= max)
+                return value;
+            ShowMessage($"Please enter a number between {min} and {max}");
+        }
+    }
 
     public void ShowWelcome()
     {
@@ -305,7 +330,7 @@ public class ConsoleUI
         return name;
     }
 
-    public (string title, string author, string year) PromptForBookDetails() // fixed name
+    public (string title, string author, string year) PromptForBookDetails()
     {
         Console.Write("Title: ");
         var title = Console.ReadLine() ?? string.Empty;
