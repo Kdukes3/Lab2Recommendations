@@ -5,9 +5,11 @@ public class ConsoleUI
     private readonly IAuthenticator _auth;
     private readonly IBookRepository _books;
     private readonly IAccountRepository _accounts;
+    private readonly IRatingRepository _ratingRepo;
     private readonly IRatingService _ratings;
     private readonly IRecommendationEngine _recs;
     private readonly IDataReader _reader;
+    private readonly IDataSeeder _seeder;
 
     public bool IsRunning { get; private set; }
 
@@ -15,16 +17,20 @@ public class ConsoleUI
         IAuthenticator auth,
         IBookRepository books,
         IAccountRepository accounts,
+        IRatingRepository ratingRepo,
         IRatingService ratings,
         IRecommendationEngine recs,
-        IDataReader reader)
+        IDataReader reader,
+        IDataSeeder seeder)
     {
         _auth = auth;
         _books = books;
         _accounts = accounts;
+        _ratingRepo = ratingRepo;
         _ratings = ratings;
         _recs = recs;
         _reader = reader;
+        _seeder = seeder;
     }
 
     public void Start() => IsRunning = true;
@@ -34,13 +40,19 @@ public class ConsoleUI
     {
         Start();
         Console.WriteLine("Welcome to our Book Recommendation System!\n");
+        
+        // File path prompts
+        var (booksPath, ratingsPath) = PromptFilePaths();
+        var seedResult = _seeder.Seed(booksPath, ratingsPath);
+        Console.WriteLine(seedResult.Message + "\n");
+        ShowCounts(_books.Count, _accounts.Count);
 
         // main menu
         var mainActions = new List<IMenuAction>
         {
             new AddMemberAction(_accounts),
             new AddBookAction(_books),
-            new LoginAction(_auth, onLoginSuccess: () => { /* no-op here */ }),
+            new LoginAction(_auth, onLoginSuccess: () => { }),
             new QuitAction(Stop)
         };
 
@@ -85,5 +97,24 @@ public class ConsoleUI
                 Console.WriteLine("Invalid option. Try again.\n");
             }
         }
+    }
+
+    public (string booksPath, string ratingsPath) PromptFilePaths()
+    {
+        Console.Write("Enter books file path: ");
+        var books = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        Console.Write("Enter rating file path: ");
+        var ratings = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        Console.WriteLine("");
+        return (books, ratings);
+    }
+
+    public void ShowCounts(int bookCount, int memberCount)
+    {
+        Console.WriteLine($"# of books: {bookCount}");
+        Console.WriteLine($"# of members: {memberCount}");
+        Console.WriteLine("");
     }
 }

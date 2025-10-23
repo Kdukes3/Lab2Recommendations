@@ -11,9 +11,10 @@ class Program
         IAuthenticator auth = new Authenticator(accounts);
         IRecommendationEngine recs = new Recommender(ratingRepo, books, accounts);
         IDataReader reader = new TextReader();
+        IDataSeeder seeder = new DataSeeder(reader, books, accounts, ratingRepo);
 
         // Hand everything to the UI and run
-        var ui = new ConsoleUI(auth, books, accounts, ratings, recs, reader);
+        var ui = new ConsoleUI(auth, books, accounts, ratingRepo, ratings, recs, reader, seeder);
         ui.Run(); 
     }
 }
