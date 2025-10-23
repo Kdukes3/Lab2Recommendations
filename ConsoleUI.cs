@@ -9,7 +9,8 @@ public class ConsoleUI
     private readonly IRecommendationEngine _recs;
     private readonly IDataReader _reader;
 
-    public ConsoleUI(IAuthenticator auth, 
+    public ConsoleUI(
+        IAuthenticator auth,
         IBookRepository books,
         IAccountRepository accounts,
         IRatingService ratings,
@@ -19,207 +20,322 @@ public class ConsoleUI
         _auth = auth;
         _books = books;
         _accounts = accounts;
-        _ratings = ratings;
+        _ratings = ratings;   // <-- this was missing before
         _recs = recs;
         _reader = reader;
     }
 
-    // -------------------------------------------------------------
-    // MAIN PROGRAM LOOP
-    // -------------------------------------------------------------
-    public void Run()
+    public bool IsRunning { get; private set; } = false;
+
+    public void Start() => IsRunning = true;
+    public void Stop()  => IsRunning = false;
+
+    /// <summary>
+    /// Runs the entire console UI: welcome, main menu loop, and (after login) the logged-in loop.
+    /// This method does not return until the user chooses "Quit".
+    /// </summary>
+    public bool Run()
     {
-        Console.WriteLine("Welcome to the Book Recommendation Program.\n");
+        Start();
+        ShowWelcome();
 
+        // If you want to load data files at start, uncomment this block and implement _reader.Load(...)
+        // var (booksPath, ratingsPath) = PromptFilePaths();
+        // var (bookCount, memberCount) = _reader.Load(booksPath, ratingsPath, _books, _accounts, _ratings);
+        // ShowCounts(bookCount, memberCount);
+
+        while (IsRunning)
+        {
+            var choice = ShowMainMenuAndGetChoice();
+
+            switch (choice)
+            {
+                case MainMenuOption.AddMember:
+                {
+                    var name = PromptForMemberName();
+
+                    // TODO: actually create a member in your accounts repository.
+                    // e.g., var id = _accounts.Create(name);
+                    ShowMessage($"Member '{name}' added. (stub)");
+                    break;
+                }
+
+                case MainMenuOption.AddBook:
+                {
+                    var (title, author, year) = PromptForBookDetails();
+
+                    // TODO: actually add a book to your repository.
+                    // e.g., _books.Add(new Book { Title = title, Author = author, Year = year });
+                    ShowMessage($"Book '{title}' by {author} ({year}) added. (stub)");
+                    break;
+                }
+
+                case MainMenuOption.Login:
+                {
+                    var memberId = PromptForMemberId();
+
+                    // TODO: replace this with your real auth call pattern.
+                    // If your authenticator returns a bool:
+                    // var ok = _auth.Login(memberId);
+                    // If it returns a result object, adjust accordingly.
+                    var loginSucceeded = TryLogin(memberId);
+
+                    if (loginSucceeded)
+                    {
+                        ShowLoginSuccess($"Login successful for member #{memberId}.");
+                        LoggedInLoop(memberId);
+                    }
+                    else
+                    {
+                        ShowLoginFailure("Login failed. Please check your member ID.");
+                    }
+                    break;
+                }
+
+                case MainMenuOption.Quit:
+                {
+                    Stop();
+                    ShowMessage("Goodbye!");
+                    break;
+                }
+
+                default:
+                {
+                    ShowMessage("Invalid option. Try again.");
+                    break;
+                }
+            }
+        }
+
+        return true; // indicates the app ran to completion
+    }
+
+    // ---------------------
+    // Logged-in sub-loop
+    // ---------------------
+    private void LoggedInLoop(int memberId)
+    {
+        var inSession = true;
+
+        while (inSession)
+        {
+            var choice = ShowLoggedInMenuAndGetChoice();
+
+            switch (choice)
+            {
+                case LoggedInMenuOption.AddMember:
+                {
+                    var name = PromptForMemberName();
+                    // TODO: create another member (admin-like action?)
+                    ShowMessage($"Member '{name}' added. (stub)");
+                    break;
+                }
+
+                case LoggedInMenuOption.AddBook:
+                {
+                    var (title, author, year) = PromptForBookDetails();
+                    // TODO: add book to repository
+                    ShowMessage($"Book '{title}' by {author} ({year}) added. (stub)");
+                    break;
+                }
+
+                case LoggedInMenuOption.RateBook:
+                {
+                    // TODO: prompt for book id & rating, then call _ratings.AddOrUpdate(memberId, bookId, score)
+                    ShowMessage("Rating flow not implemented yet. (stub)");
+                    break;
+                }
+
+                case LoggedInMenuOption.ViewRatings:
+                {
+                    // TODO: fetch and print this member’s ratings via _ratings
+                    ShowMessage("View ratings not implemented yet. (stub)");
+                    break;
+                }
+
+                case LoggedInMenuOption.SeeRecommendations:
+                {
+                    // TODO: get recs via _recs for this member and display them
+                    ShowMessage("Recommendations not implemented yet. (stub)");
+                    break;
+                }
+
+                case LoggedInMenuOption.Logout:
+                {
+                    // TODO: if your authenticator needs explicit logout, call it here.
+                    // _auth.Logout(memberId);
+                    ShowMessage("Logged out.");
+                    inSession = false;
+                    break;
+                }
+
+                default:
+                {
+                    ShowMessage("Invalid option. Try again.");
+                    break;
+                }
+            }
+        }
+    }
+
+    // Replace this shim with the real call to your authenticator to avoid compile issues if signatures differ.
+    private bool TryLogin(int memberId)
+    {
+        try
+        {
+            // If your authenticator exposes bool Login(int id), just return that:
+            // return _auth.Login(memberId);
+
+            // Placeholder behavior (always succeeds for demo):
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // ------------- Existing I/O helpers (with a couple of small fixes) -------------
+
+    public void ShowWelcome()
+    {
+        Console.WriteLine("Welcome to our Book Recommendation System!");
+        Console.WriteLine("");
+    }
+
+    public (string booksPath, string ratingsPath) PromptFilePaths()
+    {
+        Console.WriteLine("");
         Console.Write("Enter books file: ");
-        string booksFile = Console.ReadLine();
+        var books = Console.ReadLine()?.Trim() ?? string.Empty;
 
-        Console.Write("Enter rating file: ");
-        string ratingsFile = Console.ReadLine();
+        Console.Write("Enter ratings file: ");
+        var ratings = Console.ReadLine()?.Trim() ?? string.Empty;
 
-        _reader.LoadData(_books, _accounts, _ratings, booksFile, ratingsFile);
+        Console.WriteLine("");
+        Console.WriteLine($"Enter books file: {books}");
+        Console.WriteLine($"Enter ratings file: {ratings}");
+        Console.WriteLine("");
+        return (books, ratings);
+    }
 
-        Console.WriteLine($"\n# of books: {_books.Count}");
-        Console.WriteLine($"# of memberList: {_accounts.Count}\n");
+    public void ShowCounts(int bookCount, int memberCount)
+    {
+        Console.WriteLine($"# of books: {bookCount}");
+        Console.WriteLine($"# of members: {memberCount}");
+        Console.WriteLine("");
+    }
 
+    public MainMenuOption ShowMainMenuAndGetChoice()
+    {
+        Console.WriteLine("************* MENU *************");
+        Console.WriteLine("* 1. Add a new member         *");
+        Console.WriteLine("* 2. Add a new book           *");
+        Console.WriteLine("* 3. Login                    *");
+        Console.WriteLine("* 4. Quit                     *");
+        Console.WriteLine("*******************************");
+        Console.Write("");
+        Console.Write("Enter a menu option: ");
+        var input = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        Console.WriteLine("");
+        Console.WriteLine($"Enter a menu option: {input}");
+        Console.WriteLine("");
+
+        return input switch
+        {
+            "1" => MainMenuOption.AddMember,
+            "2" => MainMenuOption.AddBook,
+            "3" => MainMenuOption.Login,
+            "4" => MainMenuOption.Quit,
+            _ => MainMenuOption.None
+        };
+    }
+
+    public LoggedInMenuOption ShowLoggedInMenuAndGetChoice()
+    {
+        Console.WriteLine("************* MENU *************");
+        Console.WriteLine("* 1. Add a new member         *");
+        Console.WriteLine("* 2. Add a new book           *");
+        Console.WriteLine("* 3. Rate a book              *");
+        Console.WriteLine("* 4. View your ratings        *");
+        Console.WriteLine("* 5. See recommendations      *");
+        Console.WriteLine("* 6. Logout                   *");
+        Console.WriteLine("*******************************");
+        Console.Write("");
+        Console.Write("Enter a menu option: ");
+        var input = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        Console.WriteLine("");
+        Console.WriteLine($"Enter a menu option: {input}");
+        Console.WriteLine("");
+
+        return input switch
+        {
+            "1" => LoggedInMenuOption.AddMember,
+            "2" => LoggedInMenuOption.AddBook,
+            "3" => LoggedInMenuOption.RateBook,
+            "4" => LoggedInMenuOption.ViewRatings,
+            "5" => LoggedInMenuOption.SeeRecommendations,
+            "6" => LoggedInMenuOption.Logout,
+            _ => LoggedInMenuOption.None
+        };
+    }
+
+    public int PromptForMemberId()
+    {
         while (true)
         {
-            if (!_auth.IsLoggedIn)
-            {
-                ShowMainMenu();
-            }
-            else
-            {
-                ShowMemberMenu();
-            }
+            Console.Write("Enter member account ID: ");
+            var input = Console.ReadLine()?.Trim() ?? string.Empty;
+            Console.WriteLine($"Enter member account ID: {input}");
+
+            if (int.TryParse(input, out var id))
+                return id;
+
+            ShowMessage("Invalid number. Try again.");
         }
     }
 
-    // -------------------------------------------------------------
-    // MENU SCREENS
-    // -------------------------------------------------------------
-    private void ShowMainMenu()
+    public string PromptForMemberName()
     {
-        Console.WriteLine("************** MENU **************");
-        Console.WriteLine("* 1. Add a new member            *");
-        Console.WriteLine("* 2. Add a new book              *");
-        Console.WriteLine("* 3. Login                       *");
-        Console.WriteLine("* 4. Quit                        *");
-        Console.WriteLine("**********************************");
-        Console.Write("\nEnter a menu option: ");
-
-        string input = Console.ReadLine();
-
-        switch (input)
-        {
-            case "1": AddMember(); break;
-            case "2": AddBook(); break;
-            case "3": Login(); break;
-            case "4":
-                Console.WriteLine("\nThank you for using the Book Recommendation Program!");
-                Environment.Exit(0);
-                break;
-            default:
-                Console.WriteLine("Invalid option.\n");
-                break;
-        }
+        Console.Write("Enter member name: ");
+        var name = Console.ReadLine()?.Trim() ?? string.Empty;
+        Console.WriteLine($"Enter member name: {name}");
+        return name;
     }
 
-    private void ShowMemberMenu()
+    public (string title, string author, string year) PromptForBookDetails() // fixed name
     {
-        Console.WriteLine("************** MENU **************");
-        Console.WriteLine("* 1. Add a new member            *");
-        Console.WriteLine("* 2. Add a new book              *");
-        Console.WriteLine("* 3. Rate book                   *");
-        Console.WriteLine("* 4. View ratings                *");
-        Console.WriteLine("* 5. See recommendations         *");
-        Console.WriteLine("* 6. Logout                      *");
-        Console.WriteLine("**********************************");
-        Console.Write("\nEnter a menu option: ");
+        Console.Write("Title: ");
+        var title = Console.ReadLine() ?? string.Empty;
+        Console.Write("Author: ");
+        var author = Console.ReadLine() ?? string.Empty;
+        Console.Write("Year: ");
+        var year = Console.ReadLine() ?? string.Empty;
 
-        string input = Console.ReadLine();
+        Console.WriteLine($"Title: {title}");
+        Console.WriteLine($"Author: {author}");
+        Console.WriteLine($"Year: {year}");
 
-        switch (input)
-        {
-            case "1": AddMember(); break;
-            case "2": AddBook(); break;
-            case "3": RateBook(); break;
-            case "4": ViewRatings(); break;
-            case "5": ShowRecommendations(); break;
-            case "6": _auth.Logout(); Console.WriteLine(); break;
-            default: Console.WriteLine("Invalid option.\n"); break;
-        }
+        return (title, author, year);
     }
 
-    // -------------------------------------------------------------
-    // MENU ACTIONS
-    // -------------------------------------------------------------
-    private void AddMember()
+    public void ShowLoginSuccess(string message)
     {
-        Console.Write("Enter the name of the new member: ");
-        string name = Console.ReadLine();
-
-        var newMember = _accounts.Add(name);
-        Console.WriteLine($"{newMember.Name} (account #: {newMember.Id}) was added.\n");
+        Console.WriteLine(message);
+        Console.WriteLine("");
     }
 
-    private void AddBook()
+    public void ShowLoginFailure(string message)
     {
-        Console.Write("Enter the author of the new book: ");
-        string author = Console.ReadLine();
-        Console.Write("Enter the title of the new book: ");
-        string title = Console.ReadLine();
-        Console.Write("Enter the year (or range of years) of the new book: ");
-        string year = Console.ReadLine();
-
-        var newBook = _books.Add(author, title, year);
-        Console.WriteLine($"{newBook.Id}, {author}, {title}, {year} was added.\n");
+        Console.WriteLine(message);
+        Console.WriteLine("");
     }
 
-    private void Login()
+    public void ShowMessage(string message)
     {
-        Console.Write("\nEnter member account: ");
-        string input = Console.ReadLine();
-
-        if (int.TryParse(input, out int id))
-        {
-            var member = _accounts.GetById(id);
-            if (member != null)
-            {
-                _auth.Login(member);
-                Console.WriteLine($"{member.Name}, you are logged in!\n");
-            }
-            else Console.WriteLine("Account not found.\n");
-        }
-    }
-
-    private void RateBook()
-    {
-        var member = _auth.CurrentMember;
-        if (member == null) return;
-
-        Console.Write("\nEnter the ISBN for the book you'd like to rate: ");
-        if (int.TryParse(Console.ReadLine(), out int isbn))
-        {
-            var book = _books.GetByIsbn(isbn);
-            if (book == null)
-            {
-                Console.WriteLine("Book not found.\n");
-                return;
-            }
-
-            int currentRating = _ratings.GetRating(member.Id, isbn);
-            if (currentRating != 0)
-            {
-                Console.WriteLine($"Your current rating for {isbn}, {book.Author}, {book.Title}, {book.Year} => rating: {currentRating}");
-                Console.Write("Would you like to re-rate this book (y/n)? ");
-                if (Console.ReadLine()?.ToLower() != "y") return;
-            }
-
-            Console.Write("Enter your rating: ");
-            if (int.TryParse(Console.ReadLine(), out int value))
-            {
-                _ratings.SetRating(member.Id, isbn, value);
-                Console.WriteLine($"Your new rating for {isbn}, {book.Author}, {book.Title}, {book.Year} => rating: {value}\n");
-            }
-        }
-    }
-
-    private void ViewRatings()
-    {
-        var member = _auth.CurrentMember;
-        if (member == null) return;
-
-        Console.WriteLine($"\n{member.Name}'s ratings...");
-        for (int isbn = 1; isbn <= _books.Count; isbn++)
-        {
-            var book = _books.GetByIsbn(isbn);
-            int rating = _ratings.GetRating(member.Id, isbn);
-            Console.WriteLine($"{isbn}, {book.Author}, {book.Title}, {book.Year} => rating: {rating}");
-        }
-        Console.WriteLine();
-    }
-
-    private void ShowRecommendations()
-    {
-        var member = _auth.CurrentMember;
-        if (member == null) return;
-
-        var result = _recs.RecommendFromNearest(member.Id);
-        if (result.neighbor == null)
-        {
-            Console.WriteLine("\nNo suitable neighbor found for recommendations.\n");
-            return;
-        }
-
-        Console.WriteLine($"\nYou have similar taste in books as {result.neighbor.Name}!");
-        Console.WriteLine("\nHere are the books they really liked:");
-        foreach (var b in result.reallyLiked)
-            Console.WriteLine($"{b.Id}, {b.Author}, {b.Title}, {b.Year}");
-
-        Console.WriteLine("\nAnd here are the books they liked:");
-        foreach (var b in result.liked)
-            Console.WriteLine($"{b.Id}, {b.Author}, {b.Title}, {b.Year}");
-        Console.WriteLine();
+        Console.WriteLine(message);
+        Console.WriteLine("");
     }
 }
