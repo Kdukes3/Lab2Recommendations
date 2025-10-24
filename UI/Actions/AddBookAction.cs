@@ -16,9 +16,16 @@ public class AddBookAction : IMenuAction
         Console.Write("Title: ");  var title  = Console.ReadLine() ?? "";
         Console.Write("Author: "); var author = Console.ReadLine() ?? "";
         Console.Write("Year: ");   var year   = Console.ReadLine() ?? "";
-
-        var nextIsbn = _books.Count + 1;
-        var b = _books.Add(new Book(nextIsbn, title.Trim(), author.Trim(), year.Trim()));
-        Console.WriteLine($"Book #{b._Isbn} - '{b.Title}' by {b.Author} ({b.Year}) added.\n");
+        if (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(author) || !string.IsNullOrEmpty(year))
+        {
+            var nextIsbn = _books.Count + 1;
+            var b = _books.Add(new Book(nextIsbn, title.Trim(), author.Trim(), year.Trim()));
+            Console.WriteLine($"Book #{b._Isbn} - '{b.Title}' by {b.Author} ({b.Year}) added.\n");
+        }
+        else
+        {
+            Console.WriteLine("Invalid input, please try again. \n");
+        }
+        
     }
 }

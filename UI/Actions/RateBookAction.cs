@@ -29,7 +29,15 @@ public class RateBookAction : IMenuAction
 
         _ratings.SetRating(_memberId(), isbn, rating);
         var b = _books.GetByIsbn(isbn);
-        var label = b != null ? $"'{b.Title}'" : $"Book #{isbn}";
-        Console.WriteLine($"Rated {label} as {rating}.\n");
+        if (b != null)
+        {
+            var label = b != null ? $"'{b.Title}'" : $"Book #{isbn}";
+            Console.WriteLine($"Rated {label} as {rating}.\n");
+        }
+        else
+        {
+            Console.WriteLine("Book not found. \n");
+        }
+        
     }
 }

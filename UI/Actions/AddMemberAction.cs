@@ -14,7 +14,15 @@ public class AddMemberAction : IMenuAction
     {
         Console.Write("Enter member name: ");
         var name = (Console.ReadLine() ?? "").Trim();
-        var m = _accounts.GetOrAdd(name);
-        Console.WriteLine($"Member '{m.Name}' added with ID {m._Account}\n");
+        if (!string.IsNullOrEmpty(name))
+        {
+            var m = _accounts.GetOrAdd(name);
+            Console.WriteLine($"Member '{m.Name}' added with ID {m._Account}\n");
+        }
+        else
+        {
+            Console.WriteLine("Member name is empty, please try again. \n");
+        }
+        
     }
 }
